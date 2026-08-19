@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>นับของคงเหลือ</title>
+<style>
+  :root{
+    --bg:#181410;
+    --panel:#221c16;
+    --panel2:#2b241c;
+    --line:#3a3025;
+    --text:#f2e9dc;
+    --sub:#a99c86;
+    --accent:#e8622c;
+    --accent2:#c94f2a;
+    --good:#7ba05b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Segoe UI',system-ui,-apple-system,'Sarabun',sans-serif;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  #app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+
+  header{
+    flex:0 0 auto;
+    padding:14px 16px 12px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:linear-gradient(180deg,#221c16,#1c1712);
+  }
+  header .title{font-size:1.15rem;font-weight:800;letter-spacing:.3px;flex:1;}
+  header .title span{color:var(--accent);}
+  .viewbtn{
+    background:var(--accent);
+    color:#1c1712;
+    border:none;
+    font-weight:700;
+    padding:9px 14px;
+    border-radius:9px;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .viewbtn.alt{background:var(--panel2);color:var(--text);border:1px solid var(--line);}
+
+  .searchbar{
+    flex:0 0 auto;
+    padding:8px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  .searchbar input{
+    width:100%;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:.9rem;
+  }
+  .searchbar input:focus{outline:1px solid var(--accent);}
+
+  main{flex:1 1 auto;overflow-y:auto;padding:8px 12px 14px;}
+
+  /* counter list */
+  .row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 10px;
+    margin-bottom:6px;
+  }
+  .row .name{flex:1;font-size:.92rem;line-height:1.25;word-break:break-word;}
+  .row .count{
+    min-width:34px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+    font-weight:800;
+    font-size:1.05rem;
+  }
+  .row .count.zero{color:var(--sub);}
+  .row .count{cursor:pointer;}
+  .row .count-input{
+    min-width:34px;
+    width:44px;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
+    font-weight:800;
+    font-size:1.05rem;
+    background:var(--panel2);
+    border:1px solid var(--accent);
+    border-radius:6px;
+    color:var(--text);
+    padding:2px 0;
+  }
+  .btn{
+    width:34px;height:34px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--panel2);
+    color:var(--text);
+    font-size:1.1rem;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    user-select:none;
+  }
+  .btn:active{transform:scale(.93);}
+  .btn.minus{color:#e88;}
+  .btn.plus{color:var(--good);}
+  .btn.del{
+    width:28px;height:28px;
+    background:transparent;
+    border:none;
+    color:var(--sub);
+    font-size:.9rem;
+  }
+
+  .addrow{
+    display:flex;gap:6px;margin:10px 0 4px;
+  }
+  .addrow input{
+    flex:1;
+    background:var(--panel);
+    border:1px dashed var(--line);
+    color:var(--text);
+    border-radius:8px;
+    padding:9px 10px;
+    font-size:.88rem;
+  }
+  .addrow button{
+    background:var(--accent2);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:0 16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  .empty{color:var(--sub);text-align:center;padding:30px 10px;font-size:.9rem;}
+
+  /* summary view */
+  .summary-wrap{height:100%;display:flex;flex-direction:column;}
+  .summary-meta{
+    flex:0 0 auto;
+    padding:6px 4px 10px;
+    color:var(--sub);
+    font-size:.78rem;
+    display:flex;justify-content:space-between;
+    align-items:center;
+    gap:8px;
+  }
+  .summary-meta .counts{display:flex;gap:10px;}
+  .copybtn{
+    background:var(--panel2);
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:6px 10px;
+    font-size:.76rem;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .copybtn.copied{background:var(--good);color:#1c1712;border-color:var(--good);}
+  .grid{
+    flex:1 1 auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:5px;
+    align-content:start;
+    overflow:auto;
+  }
+  .cell{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:6px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .cell .n{font-size:.72rem;color:var(--sub);line-height:1.15;}
+  .cell .c{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;}
+  .cell.out .c{color:#c85a4a;}
+  .cell.low .c{color:var(--accent);}
+
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const STORAGE_KEY = 'stock-items-v1';
+
+const DEFAULT_ITEMS = [
+"ไส้กรอกชีส","ไส้กรอกพันเบค่อน","ไส้กรอกแดง","ชีสเนย","ไส้กรอกนม","หู้ชีส",
+"ปูอัด","สต้กไม้แบน","สเต้กกลม","หู้ปลา","โบโลน่า","ฟองหู้ปลา","ออมุก",
+"ปลาแผ่น","มันฝรั่ง","กระเจี้ยบ","บลอคโคลี่","เห็ดออรินจิ","ข้าวโพดอ่อน",
+"ฟองหู้กรอบ","ลชหมู","ลชเนื้อ","หู้หมู","ไก่เบคอน","สามชั้น","ไก่","หมู",
+"ไส้","สามชั้นพันเห็ด","สามชั้นพันวากาเมะ","ปลาหมึกกรอบ","ปลาดอลลี่",
+"ฟักทอง","ถุง 6*14"
+].map((name, i) => ({ id: 'i' + i, name, count: 0 }));
+
+let state = {
+  items: null,       // null while loading
+  view: 'list',       // 'list' | 'summary'
+  query: '',
+  saveTimer: null,
+  editingId: null,    // id of item whose count is being typed
+};
+
+function loadItems(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      state.items = JSON.parse(raw);
+    } else {
+      state.items = DEFAULT_ITEMS;
+    }
+  }catch(e){
+    state.items = DEFAULT_ITEMS;
+  }
+  render();
+  saveItems(); // ensure first save happens
+}
+
+function saveItems(){
+  clearTimeout(state.saveTimer);
+  state.saveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+    }catch(e){ /* ignore, best effort */ }
+  }, 150);
+}
+
+function change(id, delta){
+  const it = state.items.find(x=>x.id===id);
+  if(!it) return;
+  it.count = Math.max(0, it.count + delta);
+  saveItems();
+  render();
+}
+
+function setCount(id, value){
+  const it = state.items.find(x=>x.id===id);
+  if(!it) return;
+  let n = parseInt(value, 10);
+  if(isNaN(n) || n < 0) n = 0;
+  it.count = n;
+  saveItems();
+}
+
+function removeItem(id){
+  state.items = state.items.filter(x=>x.id!==id);
+  saveItems();
+  render();
+}
+
+function addItem(name){
+  name = name.trim();
+  if(!name) return;
+  state.items.push({ id: 'i' + Date.now(), name, count: 0 });
+  saveItems();
+  render();
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderList(){
+  const q = state.query.trim().toLowerCase();
+  const items = state.items.filter(it => it.name.toLowerCase().includes(q));
+  const rows = items.map(it => `
+    <div class="row">
+      <div class="name">${escapeHtml(it.name)}</div>
+      <div class="btn minus" data-act="minus" data-id="${it.id}">−</div>
+      ${state.editingId===it.id
+        ? `<input class="count-input" type="number" inputmode="numeric" data-act="countinput" data-id="${it.id}" value="${it.count}" />`
+        : `<div class="count ${it.count===0?'zero':''}" data-act="editcount" data-id="${it.id}">${it.count}</div>`}
+      <div class="btn plus" data-act="plus" data-id="${it.id}">+</div>
+      <div class="btn del" data-act="del" data-id="${it.id}">✕</div>
+    </div>
+  `).join('');
+
+  return `
+    ${rows || '<div class="empty">ไม่พบรายการที่ค้นหา</div>'}
+    <div class="addrow">
+      <input id="newItemInput" type="text" placeholder="เพิ่มรายการของใหม่..." />
+      <button id="addItemBtn">เพิ่ม</button>
+    </div>
+  `;
+}
+
+function renderSummary(){
+  const total = state.items.length;
+  const outCount = state.items.filter(i=>i.count===0).length;
+  const cells = state.items.map(it => {
+    const cls = it.count===0 ? 'out' : (it.count<=3 ? 'low':'');
+    return `<div class="cell ${cls}">
+      <div class="n">${escapeHtml(it.name)}</div>
+      <div class="c">${it.count}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="summary-wrap">
+      <div class="summary-meta">
+        <div class="counts"><span>ทั้งหมด ${total} รายการ</span><span>หมด ${outCount} รายการ</span></div>
+        <button class="copybtn" id="copyBtn">📋 คัดลอกข้อความ</button>
+      </div>
+      <div class="grid">${cells}</div>
+    </div>
+  `;
+}
+
+function buildSummaryText(){
+  const lines = state.items.map(it => `${it.name} ${it.count}`);
+  return lines.join('\n');
+}
+
+async function copySummary(btn){
+  const text = buildSummaryText();
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(e){
+    // fallback for environments without clipboard API permission
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(err){}
+    document.body.removeChild(ta);
+  }
+  btn.textContent = '✓ คัดลอกแล้ว';
+  btn.classList.add('copied');
+  setTimeout(()=>{
+    btn.textContent = '📋 คัดลอกข้อความ';
+    btn.classList.remove('copied');
+  }, 1500);
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(!state.items){
+    app.innerHTML = `<div class="empty">กำลังโหลด...</div>`;
+    return;
+  }
+
+  // remember scroll position of the scrollable area so +/- doesn't jump the view
+  const prevMain = document.querySelector('main');
+  const prevScrollTop = prevMain ? prevMain.scrollTop : 0;
+
+  app.innerHTML = `
+    <header>
+      <div class="title">📋 นับของ<span>คงเหลือ</span></div>
+      ${state.view==='list'
+        ? `<button class="viewbtn" id="toSummary">ดูสรุปทั้งหมด</button>`
+        : `<button class="viewbtn alt" id="toList">← กลับไปนับของ</button>`}
+    </header>
+    ${state.view==='list' ? `
+      <div class="searchbar">
+        <input id="searchInput" type="text" placeholder="ค้นหาชื่อของ..." value="${escapeHtml(state.query)}" />
+      </div>
+      <main>${renderList()}</main>
+    ` : `
+      <main>${renderSummary()}</main>
+    `}
+  `;
+
+  // restore scroll position
+  const newMain = document.querySelector('main');
+  if(newMain) newMain.scrollTop = prevScrollTop;
+
+  // wire events
+  const toSummary = document.getElementById('toSummary');
+  if(toSummary) toSummary.onclick = ()=>{ state.view='summary'; render(); };
+  const toList = document.getElementById('toList');
+  if(toList) toList.onclick = ()=>{ state.view='list'; render(); };
+
+  const searchInput = document.getElementById('searchInput');
+  if(searchInput){
+    searchInput.oninput = (e)=>{ state.query = e.target.value; render();
+      // keep focus & caret after re-render
+      const el = document.getElementById('searchInput');
+      if(el){ el.focus(); el.selectionStart = el.selectionEnd = el.value.length; }
+    };
+  }
+
+  document.querySelectorAll('.btn[data-act="minus"]').forEach(b=>{
+    b.onclick = ()=>change(b.dataset.id, -1);
+  });
+  document.querySelectorAll('.btn[data-act="plus"]').forEach(b=>{
+    b.onclick = ()=>change(b.dataset.id, 1);
+  });
+  document.querySelectorAll('.btn[data-act="del"]').forEach(b=>{
+    b.onclick = ()=>{ if(confirm('ลบรายการนี้?')) removeItem(b.dataset.id); };
+  });
+
+  // tap the number to edit it directly
+  document.querySelectorAll('[data-act="editcount"]').forEach(el=>{
+    el.onclick = ()=>{ state.editingId = el.dataset.id; render();
+      const input = document.querySelector(`.count-input[data-id="${el.dataset.id}"]`);
+      if(input){ input.focus(); input.select(); }
+    };
+  });
+  document.querySelectorAll('.count-input').forEach(el=>{
+    const commit = ()=>{ setCount(el.dataset.id, el.value); state.editingId = null; render(); };
+    el.onblur = commit;
+    el.onkeydown = (e)=>{
+      if(e.key==='Enter'){ commit(); }
+      else if(e.key==='Escape'){ state.editingId = null; render(); }
+    };
+  });
+
+  const copyBtn = document.getElementById('copyBtn');
+  if(copyBtn) copyBtn.onclick = ()=>copySummary(copyBtn);
+
+  const addBtn = document.getElementById('addItemBtn');
+  const newInput = document.getElementById('newItemInput');
+  if(addBtn && newInput){
+    addBtn.onclick = ()=>{ addItem(newInput.value); newInput.value=''; };
+    newInput.onkeydown = (e)=>{ if(e.key==='Enter'){ addItem(newInput.value); newInput.value=''; } };
+  }
+}
+
+loadItems();
+</script>
+</body>
+</html>
